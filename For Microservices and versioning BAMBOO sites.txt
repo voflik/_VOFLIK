@@ -1,0 +1,6 @@
+best is to go to Bamboo directly – All deployment projects: https://bamboo.neterra.paysafe.com/deploy/viewAllDeploymentProjects.action
+there you can look for the service name and if you click on the environment (like Mtl-prd in this case) you see the latest releases.
+e.g. https://bamboo.neterra.paysafe.com/deploy/viewEnvironment.action?id=83558651
+Is this what you are looking for? On DEV, QA or Pre-Prod environment you would also see all upcoming release versions if they are not deployed to Prod yet.
+1b731fdb6f4611002c8ba8ff8d3ee45f
+1b731fdb6f4611002c8ba8ff8d3ee45f

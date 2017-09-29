@@ -1,0 +1,196 @@
+<j:jelly xmlns:g="glide" xmlns:g2="null" xmlns:j="jelly:core" xmlns:j2="null" trim="false">
+<!--  Begin apply styles for table view  -->
+<style>
+<!--  Filter styles  -->
+#filter-widget .filter-results-label { color: #A09E9E; font-size: 1.275rem; font-family: 'Varela Round', sans-serif; font-weight: 700; text-transform: uppercase; } #filter-widget .filter-group { padding: 0 1.5em 1.5rem 2rem; }
+<!--  Results view styles  -->
+#results-pane .cont-card { box-shadow: 5px 5px 5px -5px #000; background-color: #f7f7f7; border:1px solid #e0e0e0; height: 125px; margin: 2rem 0 2rem 0; overflow: hidden; } #results-pane .cont-list { color: #485562; font-size: 1.5rem; line-height: 1.6rem; list-style-type: none; padding: 0 1.2rem 0 1.2rem; word-wrap: break-word; } #results-pane .cont-list li { font-size: 1.3rem; } #results-pane .img-circle{ float: right; height: 60px; width: 60px; margin: 1rem; }
+<!--  Pagination widget styles  -->
+#results-pane .pagination li.active a { color: #FFFFFF; background-color: #A09E9E; border-color: #A09E9E; } #results-pane .pagination a { color: #A09E9E; }
+<!--  Modal styles  -->
+#detail-modal .modal-detail { color: #485562; font-size: 1.5rem; line-height: 1.6rem; list-style-type: none; padding: 0 1.2rem 0 1.2rem; word-wrap: break-word; text-align: center; } #detail-modal .modal-detail li { font-size: 1.3rem; } #detail-modal .modal-chart { display : block; margin : auto; text-align: center; } #detail-modal .img-circle{ height: 75px; width: 75px; display : block; margin : auto; }
+</style>
+<!--  End apply style for table view  -->
+<!--  Begin visual components  -->
+<div id="ts-widget">
+<!--  Begin filter widget  -->
+<div class="col-md-12 ng-cloak" id="filter-widget">
+<div class="nav nav-stacked" id="accordion1">
+<div class="panel panel-default">
+<div class="panel-heading">
+<h4>
+<a class="accordion-toggle filter-results-label" data-parent="#accordion1" data-toggle="collapse" href="#tsFilter">
+Filter Results
+<i class="glyphicon glyphicon-repeat gly-spin pull-right" ng-show="recordsLoaded == false"/>
+</a>
+</h4>
+</div>
+<div class="panel-body collapse in" id="tsFilter">
+<div class="ts-animate" ng-repeat="filterSection in filterSectionsArray track by filterSection.sectionID">
+<span class="filter-results-label">{{filterSection.sectionName}}</span>
+<div class="filter-group">
+<!--  Conditionally render each fil_section ui macro  -->
+<div ng-if="filterSection.sectionType == 'checkboxes'">
+<g:inline template="x_snc_table_saw_fil_checkbox_renderer.xml"/>
+</div>
+<div ng-if="filterSection.sectionType == 'choice'">
+<g:inline template="x_snc_table_saw_fil_choice_renderer.xml"/>
+</div>
+<div ng-if="filterSection.sectionType == 'date'">
+<g:inline template="x_snc_table_saw_fil_date_renderer.xml"/>
+</div>
+<div ng-if="filterSection.sectionType == 'free_text'">
+<g:inline template="x_snc_table_saw_fil_free_text_renderer.xml"/>
+</div>
+<div ng-if="filterSection.sectionType == 'icons'">
+<g:inline template="x_snc_table_saw_fil_icon_renderer.xml"/>
+</div>
+<div ng-if="filterSection.sectionType == 'radio_buttons'">
+<g:inline template="x_snc_table_saw_fil_radio_button_renderer.xml"/>
+</div>
+<div ng-if="filterSection.sectionType == 'reference'">
+<g:inline template="x_snc_table_saw_fil_reference_renderer.xml"/>
+</div>
+<div ng-if="filterSection.sectionType == 'switches'">
+<g:inline template="x_snc_table_saw_fil_switch_renderer.xml"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!--  Collapse filter widget on small screens  -->
+<div class="device-xs visible-xs"/>
+<div class="device-sm visible-sm"/>
+<script>
+if(isBreakpoint('xs') || isBreakpoint('sm')) $j('div#tsFilter').removeClass('collapse in').addClass('collapse'); function isBreakpoint(alias) { return $j('.device-' + alias).is(':visible'); }
+</script>
+<!--  End filter widget  -->
+<!--  Begin results pane  -->
+<!--
+ Record data is accessible via the format {{record["fieldname"]}} 
+-->
+<!--
+ **Fields required must be listed on the table view record! 
+-->
+<div class="col-md-12 ng-cloak" id="results-pane">
+<div class="ts-animate" ng-repeat="record in recordsArray track by record.sys_id">
+<div class="sc-card col-xs-12 col-sm-6 col-md-4">
+<div class="cont-card">
+<img alt="Incident" class="img-circle" ng-if="record['number'] != ''" src="cb890379ff80820002ad26ec8b649da8.iix"/>
+<img alt="Incident" class="img-circle" ng-if="record['state'] == ''" src="cb890379ff80820002ad26ec8b649da8.iix"/>
+<ul class="cont-list">
+<li>
+<a data-target="#detail-modal" data-toggle="modal" href="#detail-modal" ng-click="getDetail(record.sys_id);">
+<script>
+console.log(getDetail(record.sys_id));
+</script>
+<h3>{{record["number"]}}</h3>
+</a>
+</li>
+<li>
+<strong>{{record["number"]}}</strong>
+</li>
+<li>{{record["short_description"]}}</li>
+<li>
+<br/>
+</li>
+<li ng-click="alert('XXX')" >
+<strong>Number:</strong>
+{{record["number"]}}
+</li>
+<li>
+<strong>Short Description:</strong>
+{{record["short_description"]}}
+</li>
+<li>
+<strong>Priority:</strong>
+{{record["priority"]}}
+</li>
+<li>
+<strong>Urgency:</strong>
+{{record["urgency"]}}
+</li>
+<li>
+<strong>State:</strong>
+{{record["state"]}}
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="col-xs-12 text-center" ng-show="totalItems == 0 && initDataLoaded == true">
+<h4>
+<i>There's nothing to see here!</i>
+</h4>
+</div>
+<!--  Begin paginator  -->
+<div class="col-xs-12 text-center">
+<uib-pagination boundary-links="true" class="pagination-med" first-text="«" items-per-page="itemsPerPage" last-text="»" max-size="10" next-text="›" ng-change="getPageRecords(currentPage)" ng-model="currentPage" ng-show="itemsPerPage && initDataLoaded == true" previous-text="‹" total-items="totalItems"></uib-pagination>
+</div>
+<!--  End paginator  -->
+
+
+<!--  Begin Copy Link action  -->
+<div class="col-xs-12" ng-show="initDataLoaded == true" style="text-align: center;">
+<a ng-click="aPrompt('Because of a browser limitation the URL can not be placed directly in the clipboard. Please use Ctrl-C to copy the data and escape to dismiss this dialog', getLink())">Copy link</a>
+</div>
+
+<!--  End Copy Link action  -->
+
+</div>
+<!--  End results pane  -->
+<!--  Begin results detail modal  -->
+
+<div aria-hidden="true" aria-labelledby="detailModal" class="modal ng-cloak" id="detail-modal" ng-show="detailLoaded" role="dialog" tabindex="-1">
+<div class="modal-dialog modal-lg">
+<div class="modal-content">
+<div class="modal-header">
+<img alt="Close" class="close" data-dismiss="modal" height="12" id="popup_close_image" src="images/x.gifx" style="cursor: pointer;" type="button" width="13"/>
+<h2 class="modal-title">{{detail["number"]}}</h2>
+</div>
+<div class="modal-body">
+<div class="row">
+<div class="col-md-2 col-md-push-10">
+<img alt="User Photo" class="img-circle" ng-if="detail['photo'] != ''" src="{{detail['photo']}}"/>
+<img alt="User Photo" class="img-circle" ng-if="detail['photo'] == ''" src="cb890379ff80820002ad26ec8b649da8.iix"/>
+</div>
+<div class="col-md-4 col-md-pull-2">
+<ul class="modal-detail ">
+<li>{{detail["short_description"]}}</li>
+<li>{{detail["number"]}}</li>
+<li>
+<br/>
+</li>
+<li>
+<strong>Number:</strong>
+{{detail["number"]}}
+</li>
+<li>
+<strong>Opened by:</strong>
+{{detail["opened_by"]}}
+</li>
+<li>
+<strong>Impact:</strong>
+{{detail["impact"]}}
+</li>
+<li>
+<strong>Urgency:</strong>
+{{detail["urgency"]}}
+</li>
+<li>
+<strong>Priority:</strong>
+{{detail["priority"]}}
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!--  End results detail modal  -->
+</div>
+<!--  End visual components  -->
+</j:jelly>

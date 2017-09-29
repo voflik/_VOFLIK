@@ -1,0 +1,110 @@
+https://skrilldev.service-now.com/api/now/table/change_request?sysparm_fields=u_change_template%5Eeadad7980f34070095ae079ce1050e71assignment_group%2Cf8947dfe0f9f76000643f68ce1050e00
+
+
+https://skrilldev.service-now.com/api/now/table/change_request?sys_id=-1&26sysparm_query=change_request_list.do&sysparm_query=active=true^state=-5^approval=not%20requested%5Eu_change_template%5Eeadad7980f34070095ae079ce1050e71^EQ
+
+
+
+https://community.servicenow.com/external-link.jspa?url=https%3A%2F%2Fmyinstance.service-now.com%2Fincident.do%3Fsys_id%3D-1%26sysparm_query%3Dcustomer%3D123%5Eissue%3Dsitedown%5Eurgency%3D3
+
+DevOps Master Template
+
+https://skrilldev.service-now.com/change_request.do?sys_id=-1&sysparm_query=u_change_template^1bd87aa60fd007000643f68ce1050e50^assignment_group=f8947dfe0f9f76000643f68ce1050e00
+
+WORKING:
+https://paysafetest.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=1bd87aa60fd007000643f68ce1050e50^requested_by_date=javascript:gs.now();
+
+https://paysafetest.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=41d7fec70f68070090571b1e51050ebd^requested_by_date=javascript:gs.now()^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=1c531d426f5e11002c8ba8ff8d3ee42c^u_change_subcategory=0ddb6de40f908b0095ae079ce1050e81;
+
+
+
+41d7fec70f68070090571b1e51050ebd
+
+function closeRelatedTasks(
+
+
+e04c13c76f2f5600526b7357ea3ee4d2
+
+
+1364d6d00f7807000643f68ce1050ef2
+
+190a97580f34070095ae079ce1050ee7
+
+DBA: microservice user creation
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=190a97580f34070095ae079ce1050ee7^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=fda81d500f984b0095ae079ce1050e80
+
+DBA: Release/Patch/Train/Hotfix executio
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=372a5b580f34070095ae079ce1050e42^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=642f65a80f908b0095ae079ce1050e20
+
+DBA: Documentation
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=416adb580f34070095ae079ce1050e10^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=4d0921e40f908b0095ae079ce1050e22
+
+DBA: Compare data between replicated DBs
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=563338f60f20430095ae079ce1050e73^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=82d861e40f908b0095ae079ce1050edd
+
+DBA: Install/patch/configure software 
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=a7badf580f34070095ae079ce1050e5f^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=48a9a5e40f908b0095ae079ce1050e3c
+
+DBA: Production data modification
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=b3ca17980f34070095ae079ce1050e4e^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=443655100f984b0095ae079ce1050e94
+
+DBA: Development support
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=b82a1b580f34070095ae079ce1050ee5^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=a08375e80f908b0095ae079ce1050ed8
+
+DBA: DR, HA, Scalability design/implemen
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=b9ca53980f34070095ae079ce1050ee8^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=0b6b19d00f984b0095ae079ce1050e29
+
+DBA: Partition/Compress/Drop or archive 
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=ba9f64760f20430095ae079ce1050e8b^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=0eac6de40f908b0095ae079ce1050e41
+
+DBA: Database access request
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=d381f4b60f20430095ae079ce1050e21^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=fda81d500f984b0095ae079ce1050e80
+
+
+DBA: Review/Action monitoring alerts
+https://paysafe.service-now.com/change_request.do?sys_id=-1&&sysparm_query=^u_change_template=f2123cb60f20430095ae079ce1050e8f^requested_by_date=javascript:gs.daysAgo(-1)^u_change_category=09d48e7e0f5676400643f68ce1050e50^assignment_group=47747dfe0f9f76000643f68ce1050ed8^u_change_subcategory=e54e65680f908b0095ae079ce1050e0d
+
+
+
+
+forceCloseTasks : function forceCloseTasks(current){
+		
+		// Get the tasks
+		var gr = new GlideRecord('change_task');
+		gr.addQuery('change_request', current.sys_id);
+		gr.query();
+		
+		// Defaults at all closed
+		var all_closed = true;
+		
+		// If a task is still open, set all_closed to false
+		while(gr.next()){
+			
+			gr.state = 3;
+			gr.update();
+			all_closed = true;
+		}
+		
+		// If all closed, returns true
+		if(all_closed){
+			return true;
+		}
+		
+		// If not all closed, returns false and display error message
+		//gs.addErrorMessage('Please complete all the assessment tasks');
+		return false;
+	},
+	
+	closeCTASKS(g_form.getUniqueValue());
+	
+	function closeCTASKS(x){
+		var gr = new GlideRecord('change_task');
+		gr.addQuery('change_request', current.sys_id);
+		gr.query();
+		while(gr.next()){
+			console.log(' Closing SCTASK ' + gr.numner);
+			gr.state = 3;
+			gr.update();
+			all_closed = true;
+		}
+	}
