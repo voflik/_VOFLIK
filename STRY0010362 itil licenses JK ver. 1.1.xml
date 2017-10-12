@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2017-10-06 12:36:53">
+<sys_remote_update_set action="INSERT_OR_UPDATE">
+<application display_value="Global">global</application>
+<application_name>Global</application_name>
+<application_scope>global</application_scope>
+<application_version/>
+<collisions/>
+<commit_date/>
+<deleted/>
+<description/>
+<inserted/>
+<name>STRY0010362 itil licenses JK ver. 1.1</name>
+<origin_sys_id/>
+<release_date/>
+<remote_sys_id>d7a3b5430fe10b000643f68ce1050e70</remote_sys_id>
+<state>loaded</state>
+<summary/>
+<sys_class_name>sys_remote_update_set</sys_class_name>
+<sys_created_by>georgi.klifov@paysafe.com</sys_created_by>
+<sys_created_on>2017-10-06 12:36:52</sys_created_on>
+<sys_id>d92476cb0f250b000643f68ce1050e8f</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>georgi.klifov@paysafe.com</sys_updated_by>
+<sys_updated_on>2017-10-06 12:36:52</sys_updated_on>
+<update_set display_value=""/>
+<update_source display_value=""/>
+<updated/>
+</sys_remote_update_set>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value="Global">global</application>
+<category>customer</category>
+<comments/>
+<name>sys_script_include_0417dbce0fa587000643f68ce1050ee9</name>
+<payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sys_script_include"&gt;&lt;sys_script_include action="INSERT_OR_UPDATE"&gt;&lt;access&gt;package_private&lt;/access&gt;&lt;active&gt;true&lt;/active&gt;&lt;api_name&gt;global.UserHelperUtilsPaysafe&lt;/api_name&gt;&lt;client_callable&gt;true&lt;/client_callable&gt;&lt;description&gt;Used for managing users that are not using the platform, not logged from long time, stripping roles (ITIL) for now.&amp;#13;
+To be extended! &lt;/description&gt;&lt;name&gt;UserHelperUtilsPaysafe&lt;/name&gt;&lt;script&gt;&lt;![CDATA[/*
+Class:
+UserHelperUtilsPaysafe
+
+ *Author:*
+Joro Klifov
+
+ *Company:*
+Paysafe Group
+
+ *Date created:*
+03.10.2017
+
+ *Type:*
+Script Include Prototype
+
+ *Table:*
+various - sys_user, has role, has group
+
+ *Global:*
+TRUE / Client Callable
+
+ *NOTE*
+THIS CLASS IS TO BE EXTENDED AND USED FOR MOST OF THE CLEANUP OPERATIONS RELATED TO USERS
+ */
+
+var UserHelperUtilsPaysafe = Class.create();
+UserHelperUtilsPaysafe.prototype = {
+	initialize: function() {
+	},
+	//Set limit for concurrent DB operatins at once
+	batch: 250,
+	//if = false, no update/delere operations
+	run: true,
+	//print debug messages
+	debug: true,
+	//if true notify users (trigger event)
+	note: false,
+	/*
+	@log method
+	@param String
+	@returns void
+	
+	Used to log debug messages
+ 	*/
+	log: function(message) {
+		
+		if (this.debug) {
+			gs.log(message, this.type);
+		}
+	},
+	
+	/*
+	@log getInactiveUsers
+	@param String
+	@callback
+	@returns void
+	
+	Get users not logged last 3 months and not being speacial ones
+ 	*/
+	getInactiveUsers: function(role) {
+		
+		var notifyUsers = [];
+		
+		var users = new GlideRecord('sys_user');
+		users.addEncodedQuery("last_login_timeRELATIVELT@month@ago@3^ORlast_login_timeISEMPTY^roles=" + role + "^u_for_strip=false^u_deactivation_exclusion=false^internal_integration_user=false^web_service_access_only=false");
+		users.setLimit(this.batch);
+		users.query();
+		while(users.next()) {
+			
+			users.u_first_check = new GlideDateTime(gs.now());
+			users.u_for_strip = true;
+			users.setForceUpdate(true);
+			users.setWorkflow(false);
+			if (this.run)
+				users.update();
+			//   notifyUsers.push(users.email + "");
+			this.log("User " + users.email + " updated to Marked for Strip" + notifyUsers);
+			if (this.note)
+				this.createEmailEvent(users, users.email, "Role remover");
+			
+		}
+		
+		//this.log("Users Array Inactive and For Notify passed. Conatins : " + notifyUsers);
+		//return notifyUsers;
+		
+	},
+	
+	/*
+	@log flushUserResetRole
+	@param String
+	@returns void
+	
+	Reset user for new 90 days wait period
+ 	*/
+	flushUserResetRole: function(user) {
+		
+		var resetUserRole = new GlideRecord('sys_user');
+		resetUserRole.addQuery('email', user);
+		resetUserRole.query();
+		if (resetUserRole.next()) {
+			
+			resetUserRole.last_login = new GlideDateTime(gs.now());
+			resetUserRole.u_for_strip = false;
+			resetUserRole.u_first_check = new GlideDateTime(gs.now());
+			resetUserRole.setForceUpdate(true);
+			resetUserRole.setWorkflow(false);
+			if (this.run) resetUserRole.update();
+				this.log("User " + user + " has been reset for Role Stripping");
+		}
+		
+	},
+	
+	/*
+	@checkToDelete method
+	@param String
+	@callback
+	@returns void
+	
+	Verifies the users are for role/group strip
+ 	*/
+	checkToDelete: function() {
+		
+		var checkUser = new GlideRecord('sys_user');
+		checkUser.addEncodedQuery('u_first_checkRELATIVELE@dayofweek@ago@7^u_for_strip=true^active=true');
+		checkUser.query();
+		while (checkUser.next()) {
+			this.log("User is for Role Strip/Delete : " + checkUser.email);
+			if (this.roleStripUser(checkUser.sys_id, 'itil')) {
+				
+				checkUser.u_remove_role = true;
+				checkUser.u_first_check = new GlideDateTime(gs.now());
+				checkUser.setForceUpdate(true);
+				checkUser.setWorkflow(false);
+				checkUser.update();
+			}
+		}
+		//return false;
+	},
+	
+	/*
+	@roleStripUser method
+	@param String
+	@param String
+	@callback
+	@returns void
+	
+	Used to strip the roles
+ 	*/
+	roleStripUser: function(user, role) {
+		
+		var stripUser = new GlideRecord('sys_user_has_role');
+		//var usr = this.getSysID('sys_user', user);
+		var rol = this.getSysID('sys_user_role', role);
+		this.log("SYSIDs : " + user + "  " + rol);
+		//stripUser.addQuery('user', usr["sys_id"]);
+		stripUser.addQuery('user', user);
+		stripUser.addQuery('role', rol);
+		stripUser.query();
+		
+		while (stripUser.next()) {
+			this.log("Role Granted by " + stripUser["granted_by"]);
+			//if (stripUser["granted_by"]) this.groupStripUser(usr["sys_id"], stripUser["granted_by"]);
+			if (stripUser["granted_by"]) this.groupStripUser(user, stripUser["granted_by"]);
+				//stripUser.setWorkflow(false);
+			if (this.run) stripUser.deleteRecord();
+				this.log("Record Deleted. Stripped Rights for " + user);
+			
+			
+		}
+		
+	},
+	
+	/*
+	@groupStripUser method
+	@param String
+	@param String
+	@returns void
+	
+	Used to strip groups. Only groups that gave the role, will be removed
+ 	*/
+	groupStripUser: function(user, group) {
+		
+		var stripGroup = new GlideRecord('sys_user_grmember');
+		stripGroup.addEncodedQuery('user=' + user + '^group=' + group);
+		stripGroup.query();
+		while (stripGroup.next()) {
+			
+			stripGroup.setWorkflow(false);
+			if (this.run) stripGroup.deleteRecord();
+				this.log("Record Deleted. Group removed. " + user);
+		}
+	},
+	
+	/*
+	@getSysID method
+	@param String
+	@param String
+	@returns rel
+	
+	Used to return sys_id of a value
+ 	*/
+	getSysID: function(table, value) {
+		
+		var rec = new GlideRecord(table);
+		if (rec.get(value)) {
+			
+			this.log("Got resord, return sys_id  :  " + rec.sys_id + "  for table &amp; field " + table + "  :  " + value);
+			return rec.sys_id;
+		}
+		var recc = new GlideRecord(table);
+		recc.addQuery('email', value);
+		recc.query();
+		if(recc.next()) {
+			this.log("Got user record " + recc.sys_id + "  " + recc.email);
+			return recc;
+		}
+		
+		
+	},
+	
+	/*
+	@createEmailEvent method
+	@param String
+	@param String
+	@param String
+	@returns void
+	
+	Trigger event creation
+ 	*/
+	createEmailEvent: function (obj, user, msg) {
+		gs.eventQueue("notifi.itil.role.removal", obj , user, msg);
+		this.log("Event to Notify user triggered");
+	},
+	
+	/*
+	@createEmailEventStripped method
+	@param String
+	@param String
+	@param String
+	@returns void
+	
+	Trigger event creation
+ 	*/
+	createEmailEventStripped: function (obj, user, msg) {
+		gs.eventQueue("notifi.itil.role.stripped", obj , user, msg);
+		this.log("Event to Notify Role Stripped user triggered");
+	},
+	
+	/*
+	@stripRolesFromEmail method
+	@param String
+	@returns void
+	
+	Used to remove roles. Triggered by inbound action trigger
+ 	*/
+	stripRolesFromEmail: function(user) {
+		
+		var users = new GlideRecord('sys_user');
+		users.addQuery('email', user);
+		users.query();
+		if (users.next()) {
+			this.roleStripUser(users.sys_id, "itil");
+			users.u_first_check = false;
+			users.u_for_strip = false;
+			users.u_remove_role = true;
+			users.roles = '';
+			users.setForceUpdate(true);
+			users.setWorkflow(false);
+			users.update();
+			this.log("Roles Stripped Triggered by Email Rehection. Answer was NO");
+			
+		}
+	},
+	
+	type: 'UserHelperUtilsPaysafe'
+};
+]]&gt;&lt;/script&gt;&lt;sys_class_name&gt;sys_script_include&lt;/sys_class_name&gt;&lt;sys_created_by&gt;georgi.klifov@paysafe.com&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2017-10-03 12:36:36&lt;/sys_created_on&gt;&lt;sys_customer_update&gt;true&lt;/sys_customer_update&gt;&lt;sys_id&gt;0417dbce0fa587000643f68ce1050ee9&lt;/sys_id&gt;&lt;sys_mod_count&gt;64&lt;/sys_mod_count&gt;&lt;sys_name&gt;UserHelperUtilsPaysafe&lt;/sys_name&gt;&lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_replace_on_upgrade&gt;false&lt;/sys_replace_on_upgrade&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sys_script_include_0417dbce0fa587000643f68ce1050ee9&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;georgi.klifov@paysafe.com&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2017-10-06 11:52:17&lt;/sys_updated_on&gt;&lt;/sys_script_include&gt;&lt;/record_update&gt;</payload>
+<remote_update_set display_value="STRY0010362 itil licenses JK ver. 1.1">d92476cb0f250b000643f68ce1050e8f</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>georgi.klifov@paysafe.com</sys_created_by>
+<sys_created_on>2017-10-06 12:36:52</sys_created_on>
+<sys_id>192476cb0f250b000643f68ce1050e90</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>georgi.klifov@paysafe.com</sys_updated_by>
+<sys_updated_on>2017-10-06 12:36:52</sys_updated_on>
+<table/>
+<target_name>UserHelperUtilsPaysafe</target_name>
+<type>Script Include</type>
+<update_domain>global</update_domain>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value="Global">global</application>
+<category>customer</category>
+<comments/>
+<name>sys_script_email_461042c70fe10b000643f68ce1050ebb</name>
+<payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sys_script_email"&gt;&lt;sys_script_email action="INSERT_OR_UPDATE"&gt;&lt;name&gt;SNC_CLIENT_TEMPLATE_LOGO&lt;/name&gt;&lt;new_lines_to_html&gt;false&lt;/new_lines_to_html&gt;&lt;script&gt;&lt;![CDATA[template.print('&lt;img src="' + gs.getProperty('glide.servlet.uri') + 'logo_service-now.gifx" width="260" height="55"/&gt;');
+
+]]&gt;&lt;/script&gt;&lt;sys_class_name&gt;sys_script_email&lt;/sys_class_name&gt;&lt;sys_created_by&gt;georgi.klifov@paysafe.com&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2017-10-06 08:49:27&lt;/sys_created_on&gt;&lt;sys_customer_update&gt;true&lt;/sys_customer_update&gt;&lt;sys_id&gt;461042c70fe10b000643f68ce1050ebb&lt;/sys_id&gt;&lt;sys_mod_count&gt;2&lt;/sys_mod_count&gt;&lt;sys_name&gt;SNC_CLIENT_TEMPLATE_LOGO&lt;/sys_name&gt;&lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_replace_on_upgrade&gt;false&lt;/sys_replace_on_upgrade&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sys_script_email_461042c70fe10b000643f68ce1050ebb&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;georgi.klifov@paysafe.com&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2017-10-06 09:32:26&lt;/sys_updated_on&gt;&lt;/sys_script_email&gt;&lt;/record_update&gt;</payload>
+<remote_update_set display_value="STRY0010362 itil licenses JK ver. 1.1">d92476cb0f250b000643f68ce1050e8f</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>georgi.klifov@paysafe.com</sys_created_by>
+<sys_created_on>2017-10-06 12:36:52</sys_created_on>
+<sys_id>552476cb0f250b000643f68ce1050e90</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>georgi.klifov@paysafe.com</sys_updated_by>
+<sys_updated_on>2017-10-06 12:36:52</sys_updated_on>
+<table/>
+<target_name>SNC_CLIENT_TEMPLATE_LOGO</target_name>
+<type>Email Script</type>
+<update_domain>global</update_domain>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value="Global">global</application>
+<category>customer</category>
+<comments/>
+<name>sys_script_email_25e4a433ebd31200c8690e815206fec3</name>
+<payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sys_script_email"&gt;&lt;sys_script_email action="INSERT_OR_UPDATE"&gt;&lt;name&gt;go_to_instance_hyperlink&lt;/name&gt;&lt;new_lines_to_html&gt;false&lt;/new_lines_to_html&gt;&lt;script&gt;&lt;![CDATA[(function runMailScript(current, template, email, email_action, event) {
+	
+	template.print('&lt;a href="' + gs.getProperty('glide.servlet.uri') + '" style="color:#ffffff; text-decoration: none !important;"&gt;' + 'Login to ServiceNOW' + '&lt;/a&gt;');
+	
+})(current, template, email, email_action, event);]]&gt;&lt;/script&gt;&lt;sys_class_name&gt;sys_script_email&lt;/sys_class_name&gt;&lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2016-05-16 21:30:26&lt;/sys_created_on&gt;&lt;sys_customer_update&gt;true&lt;/sys_customer_update&gt;&lt;sys_id&gt;25e4a433ebd31200c8690e815206fec3&lt;/sys_id&gt;&lt;sys_mod_count&gt;4&lt;/sys_mod_count&gt;&lt;sys_name&gt;go_to_instance_hyperlink&lt;/sys_name&gt;&lt;sys_package display_value="Email Layout" source="com.glide.email_layout"&gt;4c113b063733320021b7861754990e51&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_replace_on_upgrade&gt;false&lt;/sys_replace_on_upgrade&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sys_script_email_25e4a433ebd31200c8690e815206fec3&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;georgi.klifov@paysafe.com&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2017-10-06 09:32:14&lt;/sys_updated_on&gt;&lt;/sys_script_email&gt;&lt;/record_update&gt;</payload>
+<remote_update_set display_value="STRY0010362 itil licenses JK ver. 1.1">d92476cb0f250b000643f68ce1050e8f</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>georgi.klifov@paysafe.com</sys_created_by>
+<sys_created_on>2017-10-06 12:36:52</sys_created_on>
+<sys_id>912476cb0f250b000643f68ce1050e90</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>georgi.klifov@paysafe.com</sys_updated_by>
+<sys_updated_on>2017-10-06 12:36:52</sys_updated_on>
+<table/>
+<target_name>go_to_instance_hyperlink</target_name>
+<type>Email Script</type>
+<update_domain>global</update_domain>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application display_value="Global">global</application>
+<category>customer</category>
+<comments/>
+<name>sysevent_email_action_bf8239a60f25c7000643f68ce1050e39</name>
+<payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update sys_domain="global" table="sysevent_email_action"&gt;&lt;sysevent_email_action action="INSERT_OR_UPDATE"&gt;&lt;action_insert&gt;true&lt;/action_insert&gt;&lt;action_update&gt;false&lt;/action_update&gt;&lt;active&gt;true&lt;/active&gt;&lt;advanced_condition/&gt;&lt;affected_field_on_event&gt;parm1&lt;/affected_field_on_event&gt;&lt;collection&gt;sys_user&lt;/collection&gt;&lt;condition/&gt;&lt;content_type&gt;text/html&lt;/content_type&gt;&lt;description&gt;Notify user that itil rights are to be taken&lt;/description&gt;&lt;event_name&gt;notifi.itil.role.removal&lt;/event_name&gt;&lt;event_parm_1&gt;true&lt;/event_parm_1&gt;&lt;event_parm_2&gt;false&lt;/event_parm_2&gt;&lt;exclude_delegates&gt;true&lt;/exclude_delegates&gt;&lt;force_delivery&gt;false&lt;/force_delivery&gt;&lt;from/&gt;&lt;generation_type&gt;event&lt;/generation_type&gt;&lt;importance&gt;high&lt;/importance&gt;&lt;include_attachments&gt;false&lt;/include_attachments&gt;&lt;item&gt;event.parm1&lt;/item&gt;&lt;item_table&gt;sys_user&lt;/item_table&gt;&lt;mandatory&gt;false&lt;/mandatory&gt;&lt;message/&gt;&lt;message_html&gt;&lt;![CDATA[&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;style&gt;&lt;!--
+.content_table_even {background-color: rgb(232,232,232); color: rgb(128,121,153)} .content_table_odd {background-color: rgb(255,255,255); color: rgb(128,121,153)}.button:hover {background-color: #6495ED;}
+--&gt;&lt;/style&gt;
+&lt;table id="outerContainer" width="100%"&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="width: 900px;"&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;
+&lt;table id="innerContainer" width="100%"&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;br /&gt;${mail_script:SNC_CLIENT_TEMPLATE_LOGO}
+&lt;table width="100%" cellspacing="0" cellpadding="2"&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&amp;nbsp;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="background-color: #66cc99; color: #ffffff;"&gt;
+&lt;td style="font-size: 24px; font-weight: bold; color: #ffffff;" colspan="2"&gt;Inactivity&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 style="color: #66cc99;"&gt;Dear ${first_name} ${last_name},&lt;/h2&gt;
+&lt;p&gt;&lt;span style="font-size: 12pt;"&gt;We have identified that you have not logged into ServiceNow in the past 2 months. If you require access to ServiceNow for your daily work, please reply to this email within 1 week.&lt;/span&gt;&lt;/p&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;
+&lt;table style="text-align: center; background-color: #008000; border-color: #008000; border-radius: 5px; color: white; height: 35px;"&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class="button" style="text-align: center; color: #008000; padding-left: 20px; padding-right: 20px; font-size: 16px;"&gt;&lt;a style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; font-weight: normal; color: #ffffff; text-decoration: none; display: inline-block;" href="mailto:paysafe@service-now.com?subject=Re%3A-%20approve&amp;amp;body=%0A%0A${watermark}%20"&gt;Yes, I need such&amp;nbsp;elevated access&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;br /&gt;
+&lt;table style="text-align: center; background-color: #ff0000; border-color: #ff0000; border-radius: 5px; color: white; height: 35px;"&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td class="button" style="text-align: center; color: #ff0000; padding-left: 20px; padding-right: 20px; font-size: 16px;"&gt;&lt;a style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; font-weight: normal; color: #ffffff; text-decoration: none; display: inline-block;" href="mailto:paysafe@service-now.com?subject=Re%3A-%20reject&amp;amp;body=%0A%0A${watermark}%20"&gt;No, I don't need elevated access&lt;/a&gt;&amp;nbsp;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div&gt;&lt;hr /&gt;
+&lt;p style="color: #000000;"&gt;&lt;span style="font-size: 10pt;"&gt;In case we don't receive a confirmation your elevated permission will be removed. Once your elevated permission is removed, you will still be able to submit tickets but your access to the ServiceNow backend will be limited. &lt;/span&gt;&lt;/p&gt;
+&lt;p style="color: #000000;"&gt;&lt;span style="font-size: 10pt;"&gt;Thank you, Your ServiceNow Team&lt;/span&gt;&lt;/p&gt;
+&lt;table style="text-align: center; background-color: #278efc; border-color: #0368d4; border-radius: 5px; color: white; height: 35px;"&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style="text-align: center; color: #ffffff; padding-left: 20px; padding-right: 20px; font-size: 16px;"&gt;${mail_script:go_to_instance_hyperlink}&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/td&gt;
+&lt;td&gt;&amp;nbsp;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;]]&gt;&lt;/message_html&gt;&lt;message_list/&gt;&lt;message_text/&gt;&lt;name&gt;ITIL Role Stripper Notification 2&lt;/name&gt;&lt;omit_watermark&gt;false&lt;/omit_watermark&gt;&lt;order&gt;100&lt;/order&gt;&lt;push_message_only&gt;false&lt;/push_message_only&gt;&lt;recipient_fields/&gt;&lt;recipient_groups/&gt;&lt;recipient_users/&gt;&lt;reply_to/&gt;&lt;send_self&gt;true&lt;/send_self&gt;&lt;sms_alternate/&gt;&lt;style/&gt;&lt;subject&gt;Inactivity - Elevated permission will be removed for ${first_name} ${last_name} :  ${email}&lt;/subject&gt;&lt;subscribable&gt;true&lt;/subscribable&gt;&lt;sys_class_name&gt;sysevent_email_action&lt;/sys_class_name&gt;&lt;sys_created_by&gt;georgi.klifov@paysafe.com&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2017-10-04 18:33:22&lt;/sys_created_on&gt;&lt;sys_customer_update&gt;true&lt;/sys_customer_update&gt;&lt;sys_domain&gt;global&lt;/sys_domain&gt;&lt;sys_id&gt;bf8239a60f25c7000643f68ce1050e39&lt;/sys_id&gt;&lt;sys_mod_count&gt;20&lt;/sys_mod_count&gt;&lt;sys_name&gt;ITIL Role Stripper Notification 2&lt;/sys_name&gt;&lt;sys_overrides/&gt;&lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_replace_on_upgrade&gt;false&lt;/sys_replace_on_upgrade&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sysevent_email_action_bf8239a60f25c7000643f68ce1050e39&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;georgi.klifov@paysafe.com&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2017-10-06 12:08:54&lt;/sys_updated_on&gt;&lt;sys_version&gt;2&lt;/sys_version&gt;&lt;template/&gt;&lt;type&gt;email&lt;/type&gt;&lt;weight&gt;10&lt;/weight&gt;&lt;/sysevent_email_action&gt;&lt;/record_update&gt;</payload>
+<remote_update_set display_value="STRY0010362 itil licenses JK ver. 1.1">d92476cb0f250b000643f68ce1050e8f</remote_update_set>
+<replace_on_upgrade>false</replace_on_upgrade>
+<sys_created_by>georgi.klifov@paysafe.com</sys_created_by>
+<sys_created_on>2017-10-06 12:36:52</sys_created_on>
+<sys_id>dd2476cb0f250b000643f68ce1050e8f</sys_id>
+<sys_mod_count>0</sys_mod_count>
+<sys_updated_by>georgi.klifov@paysafe.com</sys_updated_by>
+<sys_updated_on>2017-10-06 12:36:52</sys_updated_on>
+<table>sys_user</table>
+<target_name>ITIL Role Stripper Notification 2</target_name>
+<type>Notification</type>
+<update_domain>global</update_domain>
+<update_set display_value=""/>
+<view/>
+</sys_update_xml>
+</unload>
