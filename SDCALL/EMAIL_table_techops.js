@@ -1,14 +1,14 @@
 (function executeRule(current, previous /*null when async*/) {
 	gs.log('Checking NET/Techops incident with subject ' + current.subject + ' with recipients ' + current.recipients,'TechOps: Append Incident Subject');
-	if(current.recipients.toLowerCase().indexOf('techopsalert@paysafe.com')>=0 ||
-		current.recipients.toLowerCase().indexOf('internalsupport@optimalpayments.com')>=0 ||
-	current.recipients.toLowerCase().indexOf('technicaloperations@optimalpayments.com')>=0 ||
-	current.recipients.toLowerCase().indexOf('netops-requests@optimalpayments.com')>=0 ||
-	current.recipients.toLowerCase().indexOf('netops-requests@paysafe.com') >=0 ||
-	current.recipients.toLowerCase().indexOf('test-techop-snow@paysafe.com')>=0 ||
-	current.recipients.toLowerCase().indexOf('technicaloperations@paysafe.com')>=0 || 
-	current.recipients.toLowerCase().indexOf('internalsupport@paysafe.com')>=0 || 
-	current.recipients.toLowerCase().indexOf('techopsalert@optimalpayments.com')>=0)  {
+	if(current.recipients.toLowerCase().indexOf('techopsalert@xxx.com')>=0 ||
+		current.recipients.toLowerCase().indexOf('internalsupport@xxx.com')>=0 ||
+	current.recipients.toLowerCase().indexOf('technicaloperations@xxx.com')>=0 ||
+	current.recipients.toLowerCase().indexOf('netops-requests@xxx.com')>=0 ||
+	current.recipients.toLowerCase().indexOf('netops-requests@xxx.com') >=0 ||
+	current.recipients.toLowerCase().indexOf('test-techop-snow@xxx.com')>=0 ||
+	current.recipients.toLowerCase().indexOf('technicaloperations@xxx.com')>=0 || 
+	current.recipients.toLowerCase().indexOf('internalsupport@xxx.com')>=0 || 
+	current.recipients.toLowerCase().indexOf('techopsalert@xxx.com')>=0)  {
 		gs.log('Processing NET/Techops incident with subject ' + current.subject,'TechOps: Append Incident Subject');
 		var rePrefixes = ['re:','re.:','отн.:', 'отн:', 'aw:', 'aw.:'];
 		var fwdPrefixes = ['fw:', 'fw.:', 'fwd:', 'fwd.:'];
