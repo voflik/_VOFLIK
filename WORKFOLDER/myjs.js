@@ -1,0 +1,1 @@
+var kur = function(){alert()}

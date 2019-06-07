@@ -171,6 +171,9 @@
 
     //Logger
     function addErrorLog(type, message, source, direction, mid, ouID, recInfo) {
+		var vvv = new GlideRecord( default) {
+			
+		}
 		var grErrorLog = new Interface_Monitor_Log_Lib();
 		grErrorLog.addErrorLog(type, message, source, direction, mid, ouID, recInfo);//type, message,source,direction)
 	}
